@@ -1,344 +1,565 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSC TUS - AI Bot Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>SSC AI - Telkom University Surabaya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }, colors: { telkom: { 50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d' } } } } }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; rounded: 8px;}
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        body { background-color: #f8fafc; overflow-x: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .fade-in { animation: fadeIn 0.4s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="text-slate-800 h-screen flex flex-col">
+<body class="text-slate-800 min-h-screen font-sans selection:bg-telkom-100">
 
-    <nav class="bg-red-700 text-white shadow-md flex-shrink-0 relative z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-white/20 p-2 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-bold tracking-wide">Pusat Kendali Bot SSC</h1>
-                        <p class="text-xs text-red-200">Telkom University Surabaya</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span id="botStatusBadge" class="bg-red-800 text-red-100 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center border border-red-600">
-                        <span class="w-2 h-2 rounded-full bg-slate-400 mr-2" id="statusDot"></span>
-                        <span id="statusText">Mengecek Status...</span>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                </div>
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Dokumen</p>
-                    <h3 class="text-2xl font-bold text-slate-700" id="statDatasetCount">0</h3>
-                </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
-                </div>
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Memori Paragraf (RAG)</p>
-                    <h3 class="text-2xl font-bold text-slate-700" id="statDocCount">0</h3>
-                </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </div>
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mesin AI / LLM</p>
-                    <h3 class="text-lg font-bold text-slate-700 leading-tight mt-1">Llama 3.1</h3>
-                </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                </div>
-                <div class="w-full">
-                    <a href="https://wa.me/62858958180011?text=Halo%20SSC!" target="_blank" class="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
-                        Test via WhatsApp
-                    </a>
-                </div>
-            </div>
+    <div id="landingView" class="flex flex-col relative overflow-hidden bg-white min-h-screen">
+        <div class="fixed top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+            <div class="absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full bg-telkom-50/50 blur-3xl"></div>
+            <div class="absolute -bottom-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-50/50 blur-3xl"></div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <nav class="relative z-50 px-6 py-5 sm:px-10 flex justify-between items-center sticky top-0 glass-panel border-b border-slate-100">
+            <div class="flex items-center space-x-3">
+                <div class="bg-telkom-700 p-2.5 rounded-xl shadow-md cursor-pointer" onclick="window.scrollTo(0,0)"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div>
+                <div><h1 class="text-xl font-extrabold text-slate-900 tracking-tight leading-none">SSC Bot</h1><p class="text-xs font-bold text-telkom-700 mt-1 uppercase tracking-widest">Telkom University</p></div>
+            </div>
             
-            <div class="lg:col-span-1 flex flex-col">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
-                    <div class="p-5 border-b border-slate-100 bg-slate-50/50">
-                        <h2 class="text-lg font-bold text-slate-800">Update Pedoman AI</h2>
-                        <p class="text-xs text-slate-500 mt-1">Sistem otomatis mengubah PDF menjadi ilmu bot.</p>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#beranda" class="text-sm font-bold text-slate-600 hover:text-telkom-700 transition-colors">Beranda</a>
+                <a href="#tentang" class="text-sm font-bold text-slate-600 hover:text-telkom-700 transition-colors">Tentang Kami</a>
+                <a href="#faq" class="text-sm font-bold text-slate-600 hover:text-telkom-700 transition-colors">FAQ</a>
+            </div>
+
+            <button onclick="switchView('dashboardView')" class="hidden sm:inline-flex px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">Panel Admin</button>
+        </nav>
+
+        <main id="beranda" class="relative z-10 flex flex-col justify-center items-center text-center px-4 sm:px-6 min-h-[85vh] pt-10">
+            <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-telkom-50 border border-telkom-100 text-telkom-700 text-xs font-bold mb-6 animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-telkom-600"></span>
+                <span>Sistem AI Online 24/7</span>
+            </div>
+            <h2 class="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight max-w-4xl leading-tight">Pusat Layanan Akademik <span class="text-transparent bg-clip-text bg-gradient-to-r from-telkom-600 to-red-400">Cerdas</span></h2>
+            <p class="mt-6 text-lg sm:text-xl text-slate-500 max-w-2xl font-medium">Sistem asisten virtual WhatsApp berbasis Retrieval-Augmented Generation (RAG) untuk melayani informasi akademik mahasiswa secara real-time.</p>
+            
+            <div class="mt-10 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-5">
+                <button onclick="switchView('dashboardView')" class="px-8 py-4 rounded-xl bg-telkom-700 text-white font-bold text-base hover:bg-telkom-800 shadow-lg shadow-telkom-500/30 transition-all hover:-translate-y-1">Masuk ke Panel Kendali</button>
+                <a href="https://wa.me/6285743533213" target="_blank" class="px-8 py-4 rounded-xl bg-white text-slate-700 border border-slate-200 font-bold text-base hover:bg-slate-50 shadow-sm transition-all flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                    Uji Coba Bot WA
+                </a>
+            </div>
+        </main>
+
+        <section id="tentang" class="relative z-10 py-20 bg-slate-50 border-y border-slate-200">
+            <div class="max-w-7xl mx-auto px-6 sm:px-10">
+                <div class="text-center mb-16">
+                    <h3 class="text-3xl font-black text-slate-900">Tentang Sistem Kami</h3>
+                    <p class="mt-4 text-slate-500 max-w-2xl mx-auto font-medium">Inovasi pelayanan informasi mahasiswa terpadu berbasis Kecerdasan Buatan.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Solusi Cerdas untuk Mahasiswa</h4>
+                        <p class="text-slate-600 mb-6 leading-relaxed">Sistem Student Service Center (SSC) Bot dikembangkan secara khusus oleh mahasiswa program studi Sistem Informasi untuk mengatasi tingginya antrean pertanyaan terkait pedoman akademik di kampus.</p>
+                        <p class="text-slate-600 leading-relaxed mb-8">Dengan mengintegrasikan mesin Llama 3.1 dan teknologi RAG, bot ini mampu membaca ratusan halaman dokumen pedoman kampus dan memberikan jawaban yang akurat, tepat sasaran, tanpa adanya misinformasi (halusinasi AI).</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mt-1 w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                <div><h5 class="text-sm font-bold text-slate-800">Respons Instan</h5><p class="text-xs text-slate-500 mt-1">Balasan WhatsApp dikirim dalam hitungan detik.</p></div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mt-1 w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                <div><h5 class="text-sm font-bold text-slate-800">Basis Data Terpusat</h5><p class="text-xs text-slate-500 mt-1">Seluruh jawaban ditarik langsung dari PDF Pedoman Akademik TUS.</p></div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="p-5 flex-1 flex flex-col justify-center">
-                        <form id="formUploadPdf" class="flex flex-col h-full justify-between">
-                            <div class="border-2 border-dashed border-red-200 rounded-xl p-6 text-center bg-red-50/30 hover:bg-red-50/80 transition-all group mb-4">
-                                <label class="block cursor-pointer">
-                                    <div class="p-3 bg-red-100 text-red-700 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                    </div>
-                                    <input type="file" id="pdfFileInput" name="file_pdf" accept=".pdf" required class="hidden" onchange="updateFileName(this)"/>
-                                    <span id="fileNameDisplay" class="block text-sm font-semibold text-red-700 mb-1">Klik untuk Pilih PDF</span>
-                                    <p class="text-xs text-slate-400">Maks. 10MB</p>
-                                </label>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 relative">
+                        <div class="absolute -top-4 -right-4 w-20 h-20 bg-telkom-100 rounded-full blur-xl opacity-50"></div>
+                        <div class="flex items-center space-x-4 mb-6 border-b border-slate-100 pb-4">
+                            <div class="w-12 h-12 rounded-full bg-telkom-700 text-white flex items-center justify-center font-bold text-xl">AI</div>
+                            <div><h5 class="font-bold text-slate-800">Chatbot SSC</h5><p class="text-xs text-emerald-500 font-medium">Online</p></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-slate-100 p-3 rounded-tr-2xl rounded-br-2xl rounded-bl-2xl w-3/4"><p class="text-sm text-slate-700">Gimana ya alur pengajuan cuti akademik?</p></div>
+                            <div class="bg-telkom-50 border border-telkom-100 p-4 rounded-tl-2xl rounded-bl-2xl rounded-br-2xl w-5/6 ml-auto shadow-sm">
+                                <p class="text-sm text-slate-800 font-medium">Berikut *Alur Cuti Akademik* 📝:</p>
+                                <p class="text-sm text-slate-700 mt-2">- Ajukan form permohonan.<br>- Persetujuan dosen wali.<br>- Validasi bagian administrasi.</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                            <div id="statusNotif" class="hidden rounded-lg p-3 text-xs font-medium text-center border mb-4"></div>
+        <section id="faq" class="relative z-10 py-20 bg-white">
+            <div class="max-w-4xl mx-auto px-6 sm:px-10">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl font-black text-slate-900">Pertanyaan Umum (FAQ)</h3>
+                    <p class="mt-4 text-slate-500 font-medium">Hal-hal yang sering ditanyakan seputar penggunaan sistem Bot SSC.</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:shadow-sm transition-shadow">
+                        <h4 class="text-lg font-bold text-slate-800 mb-2 flex items-center"><span class="text-telkom-600 mr-2">Q:</span> Siapa saja yang bisa menggunakan bot ini?</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed pl-7">Sistem ini dirancang untuk melayani seluruh mahasiswa Telkom University Surabaya yang membutuhkan informasi pedoman akademik dengan cepat.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:shadow-sm transition-shadow">
+                        <h4 class="text-lg font-bold text-slate-800 mb-2 flex items-center"><span class="text-telkom-600 mr-2">Q:</span> Apakah bot ini menjawab menggunakan internet?</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed pl-7">Tidak. Untuk mencegah misinformasi, bot ini menggunakan teknologi RAG yang membatasi otaknya agar <strong>hanya menjawab berdasarkan dokumen PDF</strong> yang diunggah oleh Admin ke dalam sistem.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:shadow-sm transition-shadow">
+                        <h4 class="text-lg font-bold text-slate-800 mb-2 flex items-center"><span class="text-telkom-600 mr-2">Q:</span> Bagaimana jika pedoman akademik kampus berubah?</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed pl-7">Sangat mudah. Admin cukup masuk ke Dashboard, menghapus dokumen yang lama, dan mengunggah PDF pedoman yang baru. AI akan otomatis menghapus ingatan lama dan mempelajari aturan yang baru secara seketika.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                            <button type="submit" id="btnUpload" class="mt-auto bg-red-700 text-white font-semibold py-3 px-4 rounded-xl hover:bg-red-800 transition-colors w-full flex justify-center items-center text-sm shadow-sm">
-                                Ekstrak & Masukkan ke Otak AI
-                            </button>
-                        </form>
+        <footer class="bg-slate-900 py-8 relative z-10 text-center">
+            <p class="text-slate-400 text-sm font-medium">© 2026 Student Service Center AI Bot - Telkom University Surabaya.</p>
+            <p class="text-slate-500 text-xs mt-2">Developed for Information Systems Capstone Project.</p>
+        </footer>
+    </div>
+
+
+    <div id="dashboardView" class="hidden min-h-screen flex-col bg-slate-50">
+        
+        <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm glass-panel flex-shrink-0">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-4">
+                        <button onclick="switchView('landingView')" class="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Kembali ke Beranda">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        </button>
+                        <div class="h-6 w-px bg-slate-200"></div>
+                        <div>
+                            <h1 class="text-lg font-bold text-slate-900 tracking-tight leading-none">Dashboard Admin SSC</h1>
+                            <p class="text-xs font-medium text-slate-500 mt-1">Sistem Informasi</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div id="botStatusBadge" class="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full flex items-center border border-slate-200 text-xs font-bold transition-all duration-300">
+                            <span id="statusDot" class="w-2 h-2 rounded-full bg-slate-400 mr-2"></span>
+                            <span id="statusText">Memeriksa Bot...</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-2 flex flex-col h-[500px]">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
-                    <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                        <div>
-                            <h2 class="text-lg font-bold text-slate-800">Isi Memori AI Saat Ini</h2>
-                            <p class="text-xs text-slate-500 mt-1">Daftar dokumen akademik yang sudah dipelajari bot.</p>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8 mt-2 border-t border-slate-100">
+                <button onclick="switchAdminTab('tabDokumen')" id="btnTabDokumen" class="py-3 text-sm font-bold border-b-2 border-telkom-600 text-telkom-700 transition-colors">📚 Database RAG</button>
+                <button onclick="switchAdminTab('tabFaq')" id="btnTabFaq" class="py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">⚡ Manajemen FAQ</button>
+                <button onclick="switchAdminTab('tabLog')" id="btnTabLog" class="py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">📊 Monitoring Chat</button>
+            </div>
+        </nav>
+
+        <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-y-auto">
+            
+            <div id="tabDokumen" class="block fade-in">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div><p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Total Dokumen PDF</p><h3 class="text-3xl font-black text-slate-800" id="statDatasetCount">0</h3></div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div><p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Memori Paragraf</p><h3 class="text-3xl font-black text-slate-800" id="statDocCount">0</h3></div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div><p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Mesin AI Aktif</p><h3 class="text-xl font-bold text-slate-800 mt-2">Llama 3.1 8B</h3></div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col">
+                            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                                <h3 class="text-base font-bold text-slate-800">Tambah Pengetahuan</h3>
+                                <p class="text-xs text-slate-500 mt-1">Ekstrak otomatis PDF Pedoman Akademik.</p>
+                            </div>
+                            <div class="p-6 flex-1 flex flex-col">
+                                <form id="formUploadPdf" class="flex flex-col h-full">
+                                    <div class="relative border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-telkom-500 hover:bg-telkom-50/50 transition-all group mb-5 flex-1 flex flex-col justify-center items-center">
+                                        <label class="cursor-pointer flex flex-col items-center w-full h-full justify-center">
+                                            <div class="p-3 bg-slate-100 text-slate-500 group-hover:bg-telkom-100 group-hover:text-telkom-700 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-colors">
+                                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                            </div>
+                                            <input type="file" id="pdfFileInput" name="file_pdf" accept=".pdf" required class="hidden" onchange="updateFileName(this)"/>
+                                            <span id="fileNameDisplay" class="text-sm font-bold text-slate-700 mb-1 group-hover:text-telkom-700">Pilih File PDF</span>
+                                            <p class="text-xs font-medium text-slate-400">Maks. ukuran 10MB</p>
+                                        </label>
+                                    </div>
+                                    <div id="statusNotif" class="hidden rounded-lg p-3 text-sm font-semibold text-center border mb-5"></div>
+                                    <button type="submit" id="btnUpload" class="w-full bg-telkom-700 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-telkom-800 transition-all">Ekstrak ke Database AI</button>
+                                </form>
+                            </div>
                         </div>
-                        <button onclick="fetchDatasets()" class="text-slate-400 hover:text-red-600 transition-colors" title="Refresh Data">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
+                            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                <div><h3 class="text-base font-bold text-slate-800">Database Memori Aktif</h3></div>
+                                <button onclick="fetchDatasets()" class="p-2 text-slate-400 hover:text-telkom-600 hover:bg-telkom-50 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
+                            </div>
+                            <div class="flex-1 overflow-auto custom-scrollbar p-0">
+                                <table class="min-w-full divide-y divide-slate-200 text-left">
+                                    <thead class="bg-white sticky top-0 z-10 shadow-sm">
+                                        <tr>
+                                            <th class="px-6 py-4 text-xs font-extrabold text-slate-500 uppercase w-1/2">Nama Dokumen</th>
+                                            <th class="px-6 py-4 text-xs font-extrabold text-slate-500 uppercase text-center">Data Potongan</th>
+                                            <th class="px-6 py-4 text-xs font-extrabold text-slate-500 uppercase text-right">Manajemen</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="datasetTableBody" class="bg-white divide-y divide-slate-100">
+                                        <tr><td colspan="3" class="px-6 py-12 text-center text-sm font-medium text-slate-400">Menyinkronkan data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabFaq" class="hidden fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col">
+                            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                                <h3 class="text-base font-bold text-slate-800">Tambah Jawaban Instan</h3>
+                                <p class="text-xs text-slate-500 mt-1">Bot menjawab langsung tanpa RAG jika pesan sesuai keyword.</p>
+                            </div>
+                            <div class="p-6 flex-1">
+                                <form id="formFaq" class="space-y-5">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Kata Kunci Utama</label>
+                                        <input type="text" id="faqKeyword" placeholder="contoh: halo atau terima kasih" required class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-telkom-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Template Balasan Bot</label>
+                                        <textarea id="faqResponse" placeholder="Halo! Selamat datang di SSC Telkom University Surabaya..." required rows="5" class="w-full border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-telkom-500"></textarea>
+                                    </div>
+                                    <button type="submit" class="w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl hover:bg-slate-900 transition-colors">Simpan Keyword</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
+                            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                <div><h3 class="text-base font-bold text-slate-800">Daftar Keyword Tersimpan</h3></div>
+                            </div>
+                            <div class="flex-1 overflow-auto custom-scrollbar p-0">
+                                <table class="min-w-full divide-y divide-slate-200 text-left">
+                                    <thead class="bg-white sticky top-0 z-10 shadow-sm">
+                                        <tr>
+                                            <th class="px-6 py-4 text-xs font-extrabold text-slate-500 uppercase w-1/4">Keyword</th>
+                                            <th class="px-6 py-4 text-xs font-extrabold text-slate-500 uppercase">Teks Balasan</th>
+                                            <th class="px-6 py-4 text-xs font-extrabold text-slate-500 uppercase text-right">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="faqTableBody" class="bg-white divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabLog" class="hidden fade-in h-[650px]">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+                    
+                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-800">Riwayat Percakapan AI</h3>
+                            <p class="text-xs text-slate-500 mt-1">Log interaksi bot dengan mahasiswa.</p>
+                        </div>
+                        <button onclick="fetchChatLogs()" class="flex items-center text-sm font-bold text-telkom-700 bg-telkom-50 hover:bg-telkom-100 px-4 py-2 rounded-lg border border-telkom-100 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            Segarkan Data
                         </button>
                     </div>
                     
-                    <div class="flex-1 overflow-y-auto p-0 custom-scrollbar">
-                        <table class="min-w-full divide-y divide-slate-200">
-                            <thead class="bg-slate-50 sticky top-0 z-10">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama Dokumen File</th>
-                                    <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Jml Paragraf</th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Status AI</th>
-                                </tr>
-                            </thead>
-                            <tbody id="datasetTableBody" class="bg-white divide-y divide-slate-100">
-                                <tr>
-                                    <td colspan="3" class="px-6 py-10 text-center text-sm text-slate-400">
-                                        <svg class="animate-spin inline-block w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                        Memuat data memori...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="flex-1 flex overflow-hidden">
+                        
+                        <div class="w-1/3 border-r border-slate-200 bg-white flex flex-col shrink-0">
+                            <div class="p-3 border-b border-slate-100 bg-slate-50/50">
+                                <h4 class="text-xs font-extrabold text-slate-500 uppercase tracking-widest pl-2">Daftar Kontak</h4>
+                            </div>
+                            <div id="contactList" class="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+                                </div>
+                        </div>
+                        
+                        <div class="w-2/3 bg-[url('https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')] bg-cover bg-center flex flex-col relative">
+                            <div class="absolute inset-0 bg-white/90 z-0"></div>
+
+                            <div id="chatHeader" class="px-6 py-3 border-b border-slate-200 bg-white flex items-center shadow-sm z-10 hidden">
+                                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center mr-3">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+                                </div>
+                                <h4 id="activeContactName" class="text-sm font-bold text-slate-800">Nomor Mahasiswa</h4>
+                            </div>
+
+                            <div id="chatDetail" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 z-10">
+                                <div class="h-full flex flex-col items-center justify-center text-slate-400">
+                                    <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                    <p class="text-sm font-medium">Pilih nomor mahasiswa di sebelah kiri untuk melihat percakapan.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-        </div>
-    </main>
+
+        </main>
+    </div>
 
     <script>
-        // 1. Fungsi menampilkan nama file saat dipilih
+        // --- NAVIGASI HALAMAN ---
+        function switchView(viewId) {
+            const landing = document.getElementById('landingView');
+            const dashboard = document.getElementById('dashboardView');
+            
+            if (viewId === 'dashboardView') {
+                landing.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                dashboard.classList.add('flex', 'fade-in');
+                fetchDatasets(); fetchFaqs(); fetchChatLogs();
+            } else {
+                dashboard.classList.add('hidden');
+                dashboard.classList.remove('flex', 'fade-in');
+                landing.classList.remove('hidden');
+                landing.classList.add('flex', 'fade-in');
+                window.scrollTo(0,0);
+            }
+        }
+
+        function switchAdminTab(tabId) {
+            ['tabDokumen', 'tabFaq', 'tabLog'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id).classList.remove('block');
+            });
+            ['btnTabDokumen', 'btnTabFaq', 'btnTabLog'].forEach(id => {
+                document.getElementById(id).classList.remove('border-telkom-600', 'text-telkom-700');
+                document.getElementById(id).classList.add('border-transparent', 'text-slate-500');
+            });
+
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            
+            const btnId = 'btn' + tabId.charAt(0).toUpperCase() + tabId.slice(1);
+            document.getElementById(btnId).classList.remove('border-transparent', 'text-slate-500');
+            document.getElementById(btnId).classList.add('border-telkom-600', 'text-telkom-700');
+
+            if (tabId === 'tabDokumen') fetchDatasets();
+            if (tabId === 'tabFaq') fetchFaqs();
+            if (tabId === 'tabLog') fetchChatLogs();
+        }
+
+        // --- FITUR RAG DOKUMEN ---
         function updateFileName(input) {
             const display = document.getElementById('fileNameDisplay');
             if(input.files && input.files[0]) {
                 let name = input.files[0].name;
                 if(name.length > 25) name = name.substring(0, 22) + '...pdf';
-                display.innerText = name;
-                display.classList.remove('text-red-700');
-                display.classList.add('text-slate-800');
+                display.innerHTML = `<span class="text-telkom-700">${name}</span>`;
             }
         }
 
-        // 2. Fungsi mengambil data list dataset yang sedang aktif di Bot
         async function fetchDatasets() {
             try {
                 const response = await fetch('/api/datasets');
-                
-                // Cek jika server sedang restart atau error
-                if (!response.ok) {
-                    throw new Error(`Koneksi ke server terputus (Status: ${response.status})`);
-                }
-
                 const data = await response.json();
-                
-                // Update 2 Kotak Statistik di atas
                 document.getElementById('statDatasetCount').innerText = data.datasets.length;
                 document.getElementById('statDocCount').innerText = data.totalDocuments;
 
-                // Update Tabel di kanan
                 const tbody = document.getElementById('datasetTableBody');
-                tbody.innerHTML = ''; // Kosongkan tabel
-
+                tbody.innerHTML = ''; 
                 if(data.datasets.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-sm text-slate-400">Belum ada dokumen yang diupload. Otak AI masih kosong.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-16 text-center"><h3 class="text-sm font-bold text-slate-700">Belum Ada Dokumen</h3><p class="text-xs text-slate-500 mt-1">Silakan upload PDF pedoman akademik.</p></td></tr>`;
                     return;
                 }
-
                 data.datasets.forEach(item => {
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors";
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                <span class="text-sm font-medium text-slate-700 truncate max-w-xs">${item.name}</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 text-slate-600">
-                                ${item.documentCount} Paragraf
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                            <div class="flex items-center justify-end space-x-3">
-                                <span class="text-emerald-600 font-medium flex items-center">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> Aktif
-                                </span>
-                                <button onclick="deleteDataset('${item.name}')" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 p-1.5 rounded-md transition-colors" title="Hapus Dokumen ini">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    `;
+                    tr.className = "hover:bg-slate-50 transition-colors group";
+                    tr.innerHTML = `<td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center"><div class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-red-600 flex items-center justify-center mr-3 border border-red-100"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg></div><span class="text-sm font-semibold text-slate-800 truncate max-w-[200px] sm:max-w-xs" title="${item.name}">${item.name}</span></div></td><td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-3 py-1 inline-flex text-xs font-bold rounded-md bg-slate-100 text-slate-600 border border-slate-200">${item.documentCount} Bagian</span></td><td class="px-6 py-4 whitespace-nowrap text-right"><div class="flex items-center justify-end space-x-3"><span class="text-emerald-600 text-xs font-bold flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Aktif</span><button onclick="deleteDataset('${item.name}')" class="text-slate-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors focus:outline-none" title="Hapus Dokumen"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></div></td>`;
                     tbody.appendChild(tr);
                 });
-            } catch (error) {
-                console.error("Gagal memuat dataset:", error);
-                const tbody = document.getElementById('datasetTableBody');
-                // Hentikan muter-muter, dan tampilkan alasan aslinya!
-                tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-sm font-bold text-red-600">
-                    ❌ Gagal Memuat Data Server.<br>
-                    <span class="text-xs text-slate-500 font-normal">Pastikan server Node.js menyala (Coba refresh halaman ini).</span>
-                </td></tr>`;
-            }
+            } catch (error) {}
         }
-// 3. FUNGSI BARU: Konfirmasi dan eksekusi hapus file ke server
+
         async function deleteDataset(name) {
-            if(!confirm(`⚠️ PERINGATAN!\n\nApakah Anda yakin ingin menghapus dokumen "${name}" dari otak AI?\nBot tidak akan bisa lagi menjawab pertanyaan dari dokumen ini.`)) {
-                return;
-            }
-
-            try {
-                // TAMBAHKAN encodeURIComponent DI SINI
-                const response = await fetch(`/api/datasets/${encodeURIComponent(name)}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-
-                if(result.success) {
-                    fetchDatasets(); // Refresh tabel setelah dihapus
-                    alert('✅ ' + result.message);
-                } else {
-                    alert('❌ Gagal: ' + result.message);
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert('❌ Terjadi kesalahan jaringan saat menghapus dokumen. Pastikan server menyala.');
-            }
+            if(!confirm(`Hapus dokumen "${name}"?`)) return;
+            await fetch(`/api/datasets/${encodeURIComponent(name)}`, { method: 'DELETE' });
+            fetchDatasets(); 
         }
 
-        // 4. Fungsi Cek Status WA Bot (Online/Offline)
-        async function checkBotStatus() {
-            try {
-                const response = await fetch('/api/bot/status');
-                const data = await response.json();
-                
-                const badge = document.getElementById('botStatusBadge');
-                const dot = document.getElementById('statusDot');
-                const text = document.getElementById('statusText');
-
-                if (data.isReady) {
-                    badge.className = "bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center border border-emerald-200";
-                    dot.className = "w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse";
-                    text.innerText = "Bot WA Online";
-                } else if (data.hasQRCode) {
-                    badge.className = "bg-amber-50 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center border border-amber-200";
-                    dot.className = "w-2 h-2 rounded-full bg-amber-500 mr-2 animate-pulse";
-                    text.innerText = "Menunggu Scan QR";
-                } else {
-                    badge.className = "bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center border border-slate-300";
-                    dot.className = "w-2 h-2 rounded-full bg-slate-400 mr-2";
-                    text.innerText = "Bot Offline";
-                }
-            } catch (error) {
-                console.error("Gagal cek status:", error);
-            }
-        }
-
-        // 5. Handler Form Upload PDF via AJAX
         document.getElementById('formUploadPdf').addEventListener('submit', async function(e) {
             e.preventDefault(); 
-            
             const fileInput = document.getElementById('pdfFileInput');
             const btnUpload = document.getElementById('btnUpload');
             const statusNotif = document.getElementById('statusNotif');
-            
             if (fileInput.files.length === 0) return;
+            const formData = new FormData(); formData.append('file_pdf', fileInput.files[0]);
 
-            const formData = new FormData();
-            formData.append('file_pdf', fileInput.files[0]);
-
-            // Loading state
             btnUpload.disabled = true;
-            btnUpload.classList.add('opacity-70', 'cursor-not-allowed');
-            btnUpload.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...`;
-            
-            statusNotif.className = 'rounded-lg p-3 text-xs font-medium text-center bg-blue-50 text-blue-700 border border-blue-100 block';
-            statusNotif.innerText = 'Menyalin PDF ke otak AI...';
+            btnUpload.innerHTML = `Memproses PDF...`;
+            statusNotif.className = 'rounded-lg p-3 text-sm font-semibold text-center bg-blue-50 text-blue-700 block';
+            statusNotif.innerText = 'Menyalin teks dari dokumen...';
 
             try {
-                const response = await fetch('/api/upload-pedoman', {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch('/api/upload-pedoman', { method: 'POST', body: formData });
                 const result = await response.json();
-
                 if (result.success) {
-                    statusNotif.className = 'rounded-lg p-3 text-xs font-medium text-center bg-emerald-50 text-emerald-700 border border-emerald-100 block';
-                    statusNotif.innerText = '✅ Sukses! ' + result.message;
-                    
-                    // Reset File Input
-                    fileInput.value = ''; 
-                    document.getElementById('fileNameDisplay').innerText = 'Klik untuk Pilih PDF';
-                    document.getElementById('fileNameDisplay').className = 'block text-sm font-semibold text-red-700 mb-1';
-                    
-                    // REFRESH TABEL SECARA OTOMATIS
+                    statusNotif.className = 'rounded-lg p-3 text-sm font-semibold text-center bg-emerald-50 text-emerald-700 block';
+                    statusNotif.innerText = '✅ ' + result.message;
+                    fileInput.value = ''; document.getElementById('fileNameDisplay').innerText = 'Pilih File PDF';
                     fetchDatasets();
                 } else {
-                    statusNotif.className = 'rounded-lg p-3 text-xs font-medium text-center bg-rose-50 text-rose-700 border border-rose-100 block';
+                    statusNotif.className = 'rounded-lg p-3 text-sm font-semibold text-center bg-red-50 text-red-700 block';
                     statusNotif.innerText = '❌ Gagal: ' + result.message;
                 }
             } catch (error) {
-                statusNotif.className = 'rounded-lg p-3 text-xs font-medium text-center bg-rose-50 text-rose-700 border border-rose-100 block';
-                statusNotif.innerText = '❌ Server error / terputus. Pastikan server Node.js menyala.';
+                statusNotif.className = 'rounded-lg p-3 text-sm font-semibold text-center bg-red-50 text-red-700 block';
+                statusNotif.innerText = '❌ Gagal terhubung ke server.';
             } finally {
                 btnUpload.disabled = false;
-                btnUpload.classList.remove('opacity-70', 'cursor-not-allowed');
-                btnUpload.innerText = 'Ekstrak & Masukkan ke Otak AI';
+                btnUpload.innerText = 'Ekstrak ke Database AI';
             }
         });
 
-        // 6. Jalankan fungsi Fetch saat halaman pertama kali dibuka
-        window.addEventListener('DOMContentLoaded', () => {
-            fetchDatasets();
-            checkBotStatus();
-            // Cek status bot setiap 10 detik
-            setInterval(checkBotStatus, 10000);
+        // --- FITUR FAQ ---
+        async function fetchFaqs() {
+            try {
+                const res = await fetch('/api/knowledge/keywords'); const data = await res.json();
+                const tbody = document.getElementById('faqTableBody'); tbody.innerHTML = '';
+                const keywords = Object.keys(data.responses);
+                if(keywords.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-16 text-center"><p class="text-sm font-medium text-slate-400">Belum ada Keyword tersimpan.</p></td></tr>`; return; }
+                keywords.forEach(keyword => {
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50"><td class="px-6 py-4 align-top w-1/4"><span class="bg-slate-100 border border-slate-200 px-3 py-1 rounded-md text-xs font-bold text-slate-700 inline-block">"${keyword}"</span></td><td class="px-6 py-4 text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">${data.responses[keyword]}</td><td class="px-6 py-4 align-top text-right"><button onclick="deleteFaq('${keyword}')" class="text-slate-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button></td></tr>`;
+                });
+            } catch (error) {}
+        }
+        document.getElementById('formFaq').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const kw = document.getElementById('faqKeyword').value; const res = document.getElementById('faqResponse').value;
+            await fetch('/api/knowledge/keyword', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({keyword: kw, response: res})});
+            document.getElementById('formFaq').reset(); fetchFaqs();
         });
+        async function deleteFaq(keyword) {
+            if(!confirm(`Hapus keyword "${keyword}"?`)) return;
+            await fetch(`/api/knowledge/keyword/${encodeURIComponent(keyword)}`, { method: 'DELETE' }); fetchFaqs();
+        }
+
+        // --- FITUR LOG CHAT SPLIT VIEW ---
+        let globalChatLogs = [];
+        let activeContactId = null;
+
+        async function fetchChatLogs() {
+            try {
+                const res = await fetch('/api/chat-logs'); 
+                globalChatLogs = await res.json();
+                renderContactList();
+            } catch (error) { console.error("Gagal menarik log."); }
+        }
+
+        function renderContactList() {
+            const container = document.getElementById('contactList');
+            container.innerHTML = '';
+            
+            if(globalChatLogs.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs font-semibold">Belum ada riwayat.</div>`;
+                return;
+            }
+
+            const groupedLogs = {};
+            globalChatLogs.forEach(log => {
+                if(!groupedLogs[log.userId]) groupedLogs[log.userId] = [];
+                groupedLogs[log.userId].push(log);
+            });
+
+            for (const [userId, logs] of Object.entries(groupedLogs)) {
+                const latestMsg = logs[0]; 
+                const timeStr = new Date(latestMsg.timestamp).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                const isActive = (activeContactId === userId) ? 'bg-telkom-50 border-l-4 border-telkom-600' : 'hover:bg-slate-50 border-l-4 border-transparent';
+                
+                container.innerHTML += `
+                    <div onclick="openChatRoom('${userId}')" class="p-4 cursor-pointer ${isActive} transition-colors">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-sm font-bold text-slate-800 truncate">${userId}</span>
+                            <span class="text-[10px] font-bold text-slate-400">${timeStr}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 truncate">${latestMsg.message}</p>
+                    </div>`;
+            }
+        }
+
+        function openChatRoom(userId) {
+            activeContactId = userId;
+            renderContactList(); 
+            
+            document.getElementById('chatHeader').classList.remove('hidden');
+            document.getElementById('activeContactName').innerText = "Mahasiswa: " + userId;
+            
+            const chatDetail = document.getElementById('chatDetail');
+            chatDetail.innerHTML = '';
+            
+            const userLogs = globalChatLogs.filter(log => log.userId === userId).reverse();
+            
+            userLogs.forEach(log => {
+                const timeStr = new Date(log.timestamp).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                const isFaq = log.source.includes('FAQ');
+                const badgeClass = isFaq ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                const iconType = isFaq ? '⚡ Mode Instan' : '🧠 AI Engine';
+
+                chatDetail.innerHTML += `
+                    <div class="flex justify-end mb-6">
+                        <div class="max-w-[80%]">
+                            <div class="bg-telkom-100 text-telkom-900 px-4 py-3 rounded-2xl rounded-tr-none shadow-sm border border-telkom-200">
+                                <p class="text-sm leading-relaxed">${log.message}</p>
+                            </div>
+                            <p class="text-right text-[10px] font-bold text-slate-400 mt-1">${timeStr}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-start mb-8">
+                        <div class="max-w-[90%]">
+                            <div class="bg-white border border-slate-200 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
+                                <div class="flex justify-between items-center mb-3 space-x-3">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">🤖 Bot SSC</span>
+                                    <span class="text-[9px] px-2 py-0.5 rounded-full font-bold border ${badgeClass}">${iconType}</span>
+                                </div>
+                                <p class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">${log.response}</p>
+                            </div>
+                            <p class="text-left text-[10px] font-bold text-slate-400 mt-1">${timeStr}</p>
+                        </div>
+                    </div>`;
+            });
+            chatDetail.scrollTop = chatDetail.scrollHeight;
+        }
+
+        // --- STATUS BOT ---
+        async function checkBotStatus() {
+            try {
+                const response = await fetch('/api/bot/status'); const data = await response.json();
+                const badge = document.getElementById('botStatusBadge'); const dot = document.getElementById('statusDot'); const text = document.getElementById('statusText');
+                if (data.isReady) { badge.className = "bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full flex items-center border border-emerald-200 text-xs font-bold"; dot.className = "w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"; text.innerText = "WhatsApp Online"; }
+                else if (data.hasQRCode) { badge.className = "bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full flex items-center border border-amber-200 text-xs font-bold"; dot.className = "w-2 h-2 rounded-full bg-amber-500 mr-2 animate-pulse"; text.innerText = "Perlu Scan QR"; }
+                else { badge.className = "bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full flex items-center border border-slate-200 text-xs font-bold"; dot.className = "w-2 h-2 rounded-full bg-slate-400 mr-2"; text.innerText = "Sistem Offline"; }
+            } catch (error) {}
+        }
+        window.addEventListener('DOMContentLoaded', () => { checkBotStatus(); setInterval(checkBotStatus, 5000); });
     </script>
 </body>
 </html>

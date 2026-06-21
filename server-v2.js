@@ -10,6 +10,11 @@ const Groq = require('groq-sdk');
 const RAGEngine = require('./lib/rag');
 const DatasetManager = require('./lib/dataset');
 
+// Tambahan untuk OCR
+const axios = require('axios');
+const FormData = require('form-data');
+const pdfParse = require('pdf-parse');
+
 const multer = require('multer');
 
 // Siapkan folder penampung file sementara
@@ -39,12 +44,50 @@ const handledMessageIds = new Set();
 
 const chatHistories = new Map();
 
+// --- LOKASI DATABASE ---
 const knowledgeFile = path.join(__dirname, 'knowledge.json');
 const behaviorFile = path.join(__dirname, 'config', 'behavior.json');
+const logFile = path.join(__dirname, 'data', 'chat_logs.json');
 
+// Pastikan folder dan file tersedia
+if (!fs.existsSync(path.join(__dirname, 'data'))) {
+    fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
+}
 if (!fs.existsSync(knowledgeFile)) {
     fs.writeFileSync(knowledgeFile, JSON.stringify({ keywords: {}, responses: {} }, null, 2));
 }
+if (!fs.existsSync(logFile)) {
+    fs.writeFileSync(logFile, JSON.stringify([], null, 2));
+}
+
+// ============================================================================
+// FUNGSI TATA KELOLA & MONITORING
+// ============================================================================
+function appendChatLog(userId, userMessage, aiResponse, isFaq = false) {
+    try {
+        let logs = [];
+        if (fs.existsSync(logFile)) {
+            logs = JSON.parse(fs.readFileSync(logFile, 'utf8'));
+        }
+        // Simpan log ke urutan paling atas
+        logs.unshift({
+            timestamp: new Date().toISOString(),
+            userId: userId.replace('@c.us', ''), // Bersihkan format nomor WA
+            message: userMessage,
+            response: aiResponse,
+            source: isFaq ? 'FAQ / Manual' : 'AI Engine'
+        });
+        
+        // Batasi maksimal 200 riwayat agar file tidak terlalu berat
+        if (logs.length > 200) logs = logs.slice(0, 200);
+        
+        fs.writeFileSync(logFile, JSON.stringify(logs, null, 2));
+    } catch (error) {
+        console.error('Gagal menyimpan log:', error.message);
+    }
+}
+
+// ============================================================================
 
 function loadKnowledge() {
     try {
@@ -100,7 +143,7 @@ async function getAIResponse(message, contextItems = [], behavior = null, userId
             };
         }
 
-        // PERBAIKAN: Menyaring file "Sistem_Bawaan" agar tidak dihitung sebagai dokumen
+        // Menyaring file "Sistem_Bawaan" agar tidak dihitung sebagai dokumen
         const validContexts = contextItems.filter(item => item.source !== 'Sistem_Bawaan/Sistem');
         const systemParts = [];
 
@@ -108,18 +151,14 @@ async function getAIResponse(message, contextItems = [], behavior = null, userId
 
         systemParts.push(`\n=== DATA AKADEMIK KAMPUS TUS ===`);
         
-        // JIKA DOKUMEN ADA
         if (validContexts.length > 0) {
             const contextBlock = ragEngine.buildContextBlock(validContexts);
             systemParts.push(contextBlock);
             systemParts.push(`\nPanduan Kritis Saat Menjawab:
 1. PERAN: Kamu adalah asisten AI resmi untuk Layanan Akademik (Student Service Center) Telkom University Surabaya.
 2. SUMBER DATA: Jawablah pertanyaan mahasiswa secara valid dan akurat HANYA berdasarkan data dokumen akademik di atas.
-3. BORGOL ANTI-HALUSINASI: Jika pertanyaan mahasiswa TIDAK ADA jawabannya secara eksplisit di dokumen atas, DILARANG KERAS mengarang jawaban dari pengetahuan internetmu! Kamu WAJIB menjawab dengan persis kalimat ini: "${behavior.fallback_response}"
-4. FORMAT: Gunakan bahasa yang ramah, profesional, dan gunakan poin-poin (bullet points) agar mudah dibaca.`);
-        } 
-        // JIKA DOKUMEN KOSONG (SUDAH DIHAPUS)
-        else {
+3. BORGOL ANTI-HALUSINASI: Jika pertanyaan mahasiswa TIDAK ADA jawabannya secara eksplisit di dokumen atas, DILARANG KERAS mengarang jawaban dari pengetahuan internetmu! Kamu WAJIB menjawab dengan persis kalimat ini: "${behavior.fallback_response}"`);
+        } else {
             systemParts.push(`[TIDAK ADA DATA! MEMORI DOKUMEN AKADEMIK KOSONG]`);
             systemParts.push(`\nPanduan Kritis: 
 - PERINGATAN KERAS: Saat ini data akademik kampus TUS sedang KOSONG (telah dihapus oleh admin).
@@ -147,25 +186,15 @@ async function getAIResponse(message, contextItems = [], behavior = null, userId
             messages: messages,
             model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
             max_tokens: Number(process.env.GROQ_MAX_TOKENS || 1024),
-            temperature: 0.1 // AI lebih patuh pada aturan
+            temperature: 0.1 // AI patuh pada aturan
         });
 
         let aiResponseText = completion.choices[0].message.content;
 
-        // ====================================================================
-        // KODE SAPU BERSIH: AUTO-FORMATTER REGEX KHUSUS WHATSAPP
-        // ====================================================================
-        
-        // 1. Ubah **teks** menjadi *teks* (Format Bold Asli WhatsApp)
+        // AUTO-FORMATTER REGEX KHUSUS WHATSAPP
         aiResponseText = aiResponseText.replace(/\*\*(.*?)\*\*/g, '*$1*');
-        
-        // 2. Ubah bullet points aneh (spasi lalu +, atau spasi lalu *) menjadi strip (-)
         aiResponseText = aiResponseText.replace(/^\s*[\+\*]\s+/gm, '- ');
-        
-        // 3. Rapikan baris kosong yang berlebihan agar tidak boros layar HP
         aiResponseText = aiResponseText.replace(/\n{3,}/g, '\n\n');
-
-        // ====================================================================
 
         history.push({ role: 'user', content: message });
         history.push({ role: 'assistant', content: aiResponseText });
@@ -257,9 +286,7 @@ function initializeClient() {
         try {
             const messageId = msg && msg.id && msg.id._serialized ? msg.id._serialized : null;
             if (messageId) {
-                if (handledMessageIds.has(messageId)) {
-                    return;
-                }
+                if (handledMessageIds.has(messageId)) return;
                 handledMessageIds.add(messageId);
                 setTimeout(() => handledMessageIds.delete(messageId), 5 * 60 * 1000);
             }
@@ -280,12 +307,15 @@ function initializeClient() {
             const knowledge = loadKnowledge();
             const keyword = msg.body.toLowerCase().trim();
 
+            // Pengecekan Menu FAQ
             if (knowledge.responses && knowledge.responses[keyword]) {
-                await msg.reply(knowledge.responses[keyword]);
+                const faqAnswer = knowledge.responses[keyword];
+                await msg.reply(faqAnswer);
                 console.log('↪️ Dibalas via FAQ (Keyword Match)');
+                appendChatLog(msg.from, msg.body, faqAnswer, true); // Catat Log FAQ
             } else {
+                // RAG Engine AI
                 const allDocuments = datasetManager.getAllDocuments();
-
                 const contextItems = ragEngine.retrieveContext(
                     msg.body,
                     allDocuments,
@@ -300,7 +330,6 @@ function initializeClient() {
 
                 try {
                     const behavior = loadBehavior();
-
                     const aiResponse = await Promise.race([
                         getAIResponse(msg.body, contextItems, behavior, msg.from),
                         timeoutPromise
@@ -309,6 +338,7 @@ function initializeClient() {
                     if (aiResponse) {
                         await msg.reply(aiResponse);
                         console.log(`✅ Berhasil dibalas oleh AI`);
+                        appendChatLog(msg.from, msg.body, aiResponse, false); // Catat Log AI
                     } else {
                         await msg.reply('Maaf Kak, sistem SSC sedang sibuk memproses antrean. Silakan coba beberapa saat lagi ya 🙏');
                     }
@@ -341,24 +371,61 @@ app.post('/api/upload-pedoman', upload.single('file_pdf'), async (req, res) => {
         if (!req.file) throw new Error('File PDF tidak dikirim oleh browser.');
 
         const dataBuffer = fs.readFileSync(req.file.path);
-        const pdf = require('pdf-parse');
-        
-        if (typeof pdf !== 'function') {
-            throw new Error("Modul pdf-parse rusak di komputer Kakak.");
-        }
+        let rawText = '';
 
-        let pdfData;
+        // TAHAP 1: Coba ekstrak sebagai Teks Digital murni
         try {
-            pdfData = await pdf(dataBuffer);
+            if (typeof pdfParse !== 'function') throw new Error("Modul pdf-parse rusak.");
+            const pdfData = await pdfParse(dataBuffer);
+            
+            if (pdfData.text && pdfData.text.trim().length > 50) {
+                rawText = pdfData.text;
+                console.log("✅ PDF berhasil dibaca sebagai teks murni.");
+            } else {
+                throw new Error("Teks kosong"); 
+            }
         } catch (err) {
-            throw new Error(`Gagal mengekstrak teks. File mungkin dikunci. Detail: ${err.message}`);
+            // TAHAP 2: Jika PDF berupa gambar, aktifkan API OCR
+            console.log("⚠️ PDF berupa gambar terdeteksi. Memulai proses OCR Pihak Ketiga...");
+
+            const fileSizeMB = req.file.size / (1024 * 1024);
+            if (fileSizeMB > 5) {
+                throw new Error(`Ukuran file terlalu besar (${fileSizeMB.toFixed(1)}MB). Batas gratis OCR adalah 5MB.`);
+            }
+
+            const formData = new FormData();
+            formData.append('apikey', 'K84871717888957'); // API Key milik user
+            
+            formData.append('file', fs.createReadStream(req.file.path), {
+                filename: req.file.originalname,
+                contentType: 'application/pdf'
+            });
+            formData.append('filetype', 'PDF'); 
+            formData.append('language', 'eng'); 
+            formData.append('isOverlayRequired', 'false');
+
+            const response = await axios.post('https://api.ocr.space/parse/image', formData, {
+                headers: { ...formData.getHeaders() },
+                maxBodyLength: Infinity
+            });
+
+            if (response.data.IsErroredOnProcessing) {
+                throw new Error(`Mesin OCR menolak: ${response.data.ErrorMessage[0]}`);
+            }
+
+            if (!response.data.ParsedResults || response.data.ParsedResults.length === 0) {
+                throw new Error('Mesin OCR gagal menemukan huruf yang jelas di dalam PDF ini.');
+            }
+
+            rawText = response.data.ParsedResults.map(page => page.ParsedText).join('\n');
+            console.log("✅ Gambar PDF berhasil diterjemahkan oleh mesin OCR.");
         }
 
-        const rawText = pdfData.text;
         if (!rawText || rawText.trim() === '') {
-            throw new Error('PDF kosong atau berisi Gambar/Scan kertas.');
+            throw new Error('PDF kosong atau berisi scan kertas yang terlalu buram/gelap.');
         }
 
+        // TAHAP 3: Menyusun ke Database CSV
         const originalName = req.file.originalname.replace('.pdf', '');
         const cleanName = originalName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
         const csvFileName = `dokumen_${cleanName}_${Date.now()}.csv`;
@@ -366,7 +433,16 @@ app.post('/api/upload-pedoman', upload.single('file_pdf'), async (req, res) => {
         if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
 
         const chunks = rawText.split(/\n\s*\n/).filter(chunk => chunk.trim().length > 50);
-        if (chunks.length === 0) throw new Error('Format teks di dalam PDF tidak terstruktur dengan baik.');
+        
+        if (chunks.length === 0) {
+            const textTanpaEnter = rawText.replace(/\n/g, ' ');
+            for (let i = 0; i < textTanpaEnter.length; i += 800) {
+                let potongan = textTanpaEnter.substring(i, i + 800);
+                if (potongan.trim().length > 50) chunks.push(potongan);
+            }
+        }
+        
+        if (chunks.length === 0) throw new Error('Format teks gagal distrukturkan.');
 
         let csvContent = 'Topik,Informasi\n';
         chunks.forEach((chunk, index) => {
@@ -377,23 +453,14 @@ app.post('/api/upload-pedoman', upload.single('file_pdf'), async (req, res) => {
         const targetPath = path.join(__dirname, 'data', csvFileName);
         fs.writeFileSync(targetPath, csvContent, 'utf8');
 
-        // PERBAIKAN: Refresh Dataset DAN Refresh Cache RAG Engine
-        if (typeof datasetManager.loadDatasets === 'function') {
-            datasetManager.loadDatasets(); 
-        }
-        
-        // PENTING: Tambahkan ini agar mesin RAG langsung menyerap data baru
-        if (ragEngine && typeof ragEngine.clearCache === 'function') {
-            ragEngine.clearCache();
-        }
+        if (typeof datasetManager.loadDatasets === 'function') datasetManager.loadDatasets(); 
+        if (ragEngine && typeof ragEngine.clearCache === 'function') ragEngine.clearCache();
 
-        res.json({ success: true, message: `Sukses! Bot kini mempelajari ${chunks.length} paragraf baru.` });
+        res.json({ success: true, message: `Sukses (Mode OCR)! AI menyerap ${chunks.length} paragraf baru.` });
 
     } catch (error) {
         console.error('❌ ERROR UPLOAD:', error.message);
-        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
+        if (req.file && req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         res.status(500).json({ success: false, message: error.message });
     }
 });
@@ -495,6 +562,20 @@ app.delete('/api/datasets/:name', (req, res) => {
     } catch (error) {
         console.error('Error saat menghapus di server:', error);
         res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+    }
+});
+
+// ROUTE BARU UNTUK MENGAMBIL LOG MONITORING CHAT
+app.get('/api/chat-logs', (req, res) => {
+    try {
+        if (fs.existsSync(logFile)) {
+            const logs = JSON.parse(fs.readFileSync(logFile, 'utf8'));
+            res.json(logs);
+        } else {
+            res.json([]);
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
