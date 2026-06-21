@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSC TUS - AI Bot Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; rounded: 8px;}
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col">
+
+    <nav class="bg-red-700 text-white shadow-md flex-shrink-0 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white/20 p-2 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-wide">Pusat Kendali Bot SSC</h1>
+                        <p class="text-xs text-red-200">Telkom University Surabaya</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="botStatusBadge" class="bg-red-800 text-red-100 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center border border-red-600">
+                        <span class="w-2 h-2 rounded-full bg-slate-400 mr-2" id="statusDot"></span>
+                        <span id="statusText">Mengecek Status...</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Dokumen</p>
+                    <h3 class="text-2xl font-bold text-slate-700" id="statDatasetCount">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Memori Paragraf (RAG)</p>
+                    <h3 class="text-2xl font-bold text-slate-700" id="statDocCount">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mesin AI / LLM</p>
+                    <h3 class="text-lg font-bold text-slate-700 leading-tight mt-1">Llama 3.1</h3>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                </div>
+                <div class="w-full">
+                    <a href="https://wa.me/62858958180011?text=Halo%20SSC!" target="_blank" class="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+                        Test via WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="lg:col-span-1 flex flex-col">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+                    <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                        <h2 class="text-lg font-bold text-slate-800">Update Pedoman AI</h2>
+                        <p class="text-xs text-slate-500 mt-1">Sistem otomatis mengubah PDF menjadi ilmu bot.</p>
+                    </div>
+                    
+                    <div class="p-5 flex-1 flex flex-col justify-center">
+                        <form id="formUploadPdf" class="flex flex-col h-full justify-between">
+                            <div class="border-2 border-dashed border-red-200 rounded-xl p-6 text-center bg-red-50/30 hover:bg-red-50/80 transition-all group mb-4">
+                                <label class="block cursor-pointer">
+                                    <div class="p-3 bg-red-100 text-red-700 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    </div>
+                                    <input type="file" id="pdfFileInput" name="file_pdf" accept=".pdf" required class="hidden" onchange="updateFileName(this)"/>
+                                    <span id="fileNameDisplay" class="block text-sm font-semibold text-red-700 mb-1">Klik untuk Pilih PDF</span>
+                                    <p class="text-xs text-slate-400">Maks. 10MB</p>
+                                </label>
+                            </div>
+
+                            <div id="statusNotif" class="hidden rounded-lg p-3 text-xs font-medium text-center border mb-4"></div>
+
+                            <button type="submit" id="btnUpload" class="mt-auto bg-red-700 text-white font-semibold py-3 px-4 rounded-xl hover:bg-red-800 transition-colors w-full flex justify-center items-center text-sm shadow-sm">
+                                Ekstrak & Masukkan ke Otak AI
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 flex flex-col h-[500px]">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Isi Memori AI Saat Ini</h2>
+                            <p class="text-xs text-slate-500 mt-1">Daftar dokumen akademik yang sudah dipelajari bot.</p>
+                        </div>
+                        <button onclick="fetchDatasets()" class="text-slate-400 hover:text-red-600 transition-colors" title="Refresh Data">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-0 custom-scrollbar">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50 sticky top-0 z-10">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama Dokumen File</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Jml Paragraf</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Status AI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="datasetTableBody" class="bg-white divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="3" class="px-6 py-10 text-center text-sm text-slate-400">
+                                        <svg class="animate-spin inline-block w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        Memuat data memori...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <script>
+        // 1. Fungsi menampilkan nama file saat dipilih
+        function updateFileName(input) {
+            const display = document.getElementById('fileNameDisplay');
+            if(input.files && input.files[0]) {
+                let name = input.files[0].name;
+                if(name.length > 25) name = name.substring(0, 22) + '...pdf';
+                display.innerText = name;
+                display.classList.remove('text-red-700');
+                display.classList.add('text-slate-800');
+            }
+        }
+
+        // 2. Fungsi mengambil data list dataset yang sedang aktif di Bot
+        async function fetchDatasets() {
+            try {
+                const response = await fetch('/api/datasets');
+                
+                // Cek jika server sedang restart atau error
+                if (!response.ok) {
+                    throw new Error(`Koneksi ke server terputus (Status: ${response.status})`);
+                }
+
+                const data = await response.json();
+                
+                // Update 2 Kotak Statistik di atas
+                document.getElementById('statDatasetCount').innerText = data.datasets.length;
+                document.getElementById('statDocCount').innerText = data.totalDocuments;
+
+                // Update Tabel di kanan
+                const tbody = document.getElementById('datasetTableBody');
+                tbody.innerHTML = ''; // Kosongkan tabel
+
+                if(data.datasets.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-sm text-slate-400">Belum ada dokumen yang diupload. Otak AI masih kosong.</td></tr>`;
+                    return;
+                }
+
+                data.datasets.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                <span class="text-sm font-medium text-slate-700 truncate max-w-xs">${item.name}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 text-slate-600">
+                                ${item.documentCount} Paragraf
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            <div class="flex items-center justify-end space-x-3">
+                                <span class="text-emerald-600 font-medium flex items-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> Aktif
+                                </span>
+                                <button onclick="deleteDataset('${item.name}')" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 p-1.5 rounded-md transition-colors" title="Hapus Dokumen ini">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Gagal memuat dataset:", error);
+                const tbody = document.getElementById('datasetTableBody');
+                // Hentikan muter-muter, dan tampilkan alasan aslinya!
+                tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-sm font-bold text-red-600">
+                    ❌ Gagal Memuat Data Server.<br>
+                    <span class="text-xs text-slate-500 font-normal">Pastikan server Node.js menyala (Coba refresh halaman ini).</span>
+                </td></tr>`;
+            }
+        }
+// 3. FUNGSI BARU: Konfirmasi dan eksekusi hapus file ke server
+        async function deleteDataset(name) {
+            if(!confirm(`⚠️ PERINGATAN!\n\nApakah Anda yakin ingin menghapus dokumen "${name}" dari otak AI?\nBot tidak akan bisa lagi menjawab pertanyaan dari dokumen ini.`)) {
+                return;
+            }
+
+            try {
+                // TAMBAHKAN encodeURIComponent DI SINI
+                const response = await fetch(`/api/datasets/${encodeURIComponent(name)}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+
+                if(result.success) {
+                    fetchDatasets(); // Refresh tabel setelah dihapus
+                    alert('✅ ' + result.message);
+                } else {
+                    alert('❌ Gagal: ' + result.message);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert('❌ Terjadi kesalahan jaringan saat menghapus dokumen. Pastikan server menyala.');
+            }
+        }
+
+        // 4. Fungsi Cek Status WA Bot (Online/Offline)
+        async function checkBotStatus() {
+            try {
+                const response = await fetch('/api/bot/status');
+                const data = await response.json();
+                
+                const badge = document.getElementById('botStatusBadge');
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+
+                if (data.isReady) {
+                    badge.className = "bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center border border-emerald-200";
+                    dot.className = "w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse";
+                    text.innerText = "Bot WA Online";
+                } else if (data.hasQRCode) {
+                    badge.className = "bg-amber-50 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center border border-amber-200";
+                    dot.className = "w-2 h-2 rounded-full bg-amber-500 mr-2 animate-pulse";
+                    text.innerText = "Menunggu Scan QR";
+                } else {
+                    badge.className = "bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center border border-slate-300";
+                    dot.className = "w-2 h-2 rounded-full bg-slate-400 mr-2";
+                    text.innerText = "Bot Offline";
+                }
+            } catch (error) {
+                console.error("Gagal cek status:", error);
+            }
+        }
+
+        // 5. Handler Form Upload PDF via AJAX
+        document.getElementById('formUploadPdf').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+            
+            const fileInput = document.getElementById('pdfFileInput');
+            const btnUpload = document.getElementById('btnUpload');
+            const statusNotif = document.getElementById('statusNotif');
+            
+            if (fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('file_pdf', fileInput.files[0]);
+
+            // Loading state
+            btnUpload.disabled = true;
+            btnUpload.classList.add('opacity-70', 'cursor-not-allowed');
+            btnUpload.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...`;
+            
+            statusNotif.className = 'rounded-lg p-3 text-xs font-medium text-center bg-blue-50 text-blue-700 border border-blue-100 block';
+            statusNotif.innerText = 'Menyalin PDF ke otak AI...';
+
+            try {
+                const response = await fetch('/api/upload-pedoman', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    statusNotif.className = 'rounded-lg p-3 text-xs font-medium text-center bg-emerald-50 text-emerald-700 border border-emerald-100 block';
+                    statusNotif.innerText = '✅ Sukses! ' + result.message;
+                    
+                    // Reset File Input
+                    fileInput.value = ''; 
+                    document.getElementById('fileNameDisplay').innerText = 'Klik untuk Pilih PDF';
+                    document.getElementById('fileNameDisplay').className = 'block text-sm font-semibold text-red-700 mb-1';
+                    
+                    // REFRESH TABEL SECARA OTOMATIS
+                    fetchDatasets();
+                } else {
+                    statusNotif.className = 'rounded-lg p-3 text-xs font-medium text-center bg-rose-50 text-rose-700 border border-rose-100 block';
+                    statusNotif.innerText = '❌ Gagal: ' + result.message;
+                }
+            } catch (error) {
+                statusNotif.className = 'rounded-lg p-3 text-xs font-medium text-center bg-rose-50 text-rose-700 border border-rose-100 block';
+                statusNotif.innerText = '❌ Server error / terputus. Pastikan server Node.js menyala.';
+            } finally {
+                btnUpload.disabled = false;
+                btnUpload.classList.remove('opacity-70', 'cursor-not-allowed');
+                btnUpload.innerText = 'Ekstrak & Masukkan ke Otak AI';
+            }
+        });
+
+        // 6. Jalankan fungsi Fetch saat halaman pertama kali dibuka
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchDatasets();
+            checkBotStatus();
+            // Cek status bot setiap 10 detik
+            setInterval(checkBotStatus, 10000);
+        });
+    </script>
+</body>
+</html>
